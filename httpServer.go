@@ -22,11 +22,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Println(r.Method)
 	case post:
-		fmt.Fprintf(w, "%s is the method. This is the URL %s\n", r.Method, r.URL)
+		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Println(r.Method)
 	case delete:
-		fmt.Fprintf(w, "%s is the method. This is the URL %s\n", r.Method, r.URL)
-		fmt.Println("%s is the method. This is the URL %s\n", r.Method)
+		fmt.Println(r.Method)
 	}
 	// fmt.Println(r.Method)
 }
