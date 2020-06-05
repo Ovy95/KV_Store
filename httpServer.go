@@ -5,13 +5,28 @@ import (
 	"net/http"
 )
 
+const get string = "GET"
+const post string = "POST"
+const delete string = "DELETE"
+
 func main() {
 	http.HandleFunc("/", handler)
 	fmt.Println("Server is starting on port 8080")
 	http.ListenAndServe(":8080", nil)
 }
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Test text to appear on page    ")
-	fmt.Fprintf(w, "")
-	fmt.Fprintf(w, "%s is the method. This is the URL %s\n", r.Method, r.URL)
+	switch r.Method {
+	case get:
+		fmt.Fprintf(w, "CASE METHOD   ")
+		fmt.Fprintf(w, "")
+		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
+		fmt.Println(r.Method)
+	case post:
+		fmt.Fprintf(w, "%s is the method. This is the URL %s\n", r.Method, r.URL)
+		fmt.Println(r.Method)
+	case delete:
+		fmt.Fprintf(w, "%s is the method. This is the URL %s\n", r.Method, r.URL)
+		fmt.Println("%s is the method. This is the URL %s\n", r.Method)
+	}
+	// fmt.Println(r.Method)
 }
