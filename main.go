@@ -11,6 +11,14 @@ const get = "GET"
 const post = "POST"
 const delete = "DELETE"
 
+type storeMethods interface {
+	storeInterface()
+}
+
+type httpVerbs struct {
+	verb string
+}
+
 func main() {
 	http.HandleFunc("/", handler)
 	fmt.Println("Server is starting on port 8080")
@@ -23,7 +31,6 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-
 	case get:
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Fprintf(w, "----\n")
@@ -37,20 +44,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		// keystore = append(keystore, method)
 		keystore = append(keystore, Url)
 		fmt.Println(keystore)
-		storeInterface(r.Method)
+
 		fmt.Fprintf(w, "put") // Writing on the actually page
 		break
 	case post:
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Println(r.Method)
 		fmt.Fprintf(w, "Post")
-		storeInterface(r.Method)
+
 		break
 	case put:
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Println(r.Method)
 		fmt.Fprintf(w, "put")
-		storeInterface(r.Method)
+		urlstring := r.Method
+		url := httpVerbs{urlstring}
+		fmt.Println(url)
 		break
 	case delete:
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
@@ -62,23 +71,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func storeInterface(method string) {
-	if method == "GET" {
-		fmt.Println("This is running the get if statment")
-	} else if method == "PUT" {
-		fmt.Println("- Set(key string, value []byte): this will set or update the key with the specified value")
-	} else if method == delete {
-		fmt.Println("- Deletes(key string): this will delete the key from the store")
-	}
-}
+func (v httpVerbs) storeInterface() {
+	if v.verb == "GET" {
 
-// This is this to be a receiver function of type string, then do the rest .
-// func storeInterface {
-// 	if r.Method == "GET" {
-// 		fmt.Println("This is running the get if statment")
-// 	} else if r.Method == put {
-// 		fmt.Println("- Set(key string, value []byte): this will set or update the key with the specified value")
-// 	} else if r.Method == delete {
-// 		fmt.Println("- Deletes(key string): this will delete the key from the store")
-// 	}
-// }
+		fmt.Println("This is running the GET if statment")
+
+	} else if v.verb == "PUT" {
+		fmt.Println("PUT- Set(key string, value []byte): this will set or update the key with the specified value")
+	} else if v.verb == delete {
+		fmt.Println("DELETE- Deletes(key string): this will delete the key from the store")
+	} else {
+		fmt.Println(v.verb)
+		fmt.Println("This is the value that got print out")
+	}
+
+}
