@@ -6,11 +6,6 @@ import (
 	"net/http"
 )
 
-const put = "PUT"
-const get = "GET"
-const post = "POST"
-const delete = "DELETE"
-
 type storeMethods interface {
 	storeInterface()
 }
@@ -31,40 +26,54 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case get:
+	case "GET":
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Fprintf(w, "----\n")
-		fmt.Printf(r.Method)
-		fmt.Println(r.URL)
 
-		Url := r.URL.String()
-		// method := r.Method
-		keystore := []string{}
-		keystore = append(keystore, "coco")
-		// keystore = append(keystore, method)
-		keystore = append(keystore, Url)
-		fmt.Println(keystore)
+		verb := r.Method
+		method := httpVerbs{verb}
+		httpVerbs.storeInterface(method)
 
-		fmt.Fprintf(w, "put") // Writing on the actually page
-		break
-	case post:
-		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
-		fmt.Println(r.Method)
-		fmt.Fprintf(w, "Post")
-
-		break
-	case put:
-		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
-		fmt.Println(r.Method)
-		fmt.Fprintf(w, "put")
-		urlstring := r.Method
-		url := httpVerbs{urlstring}
+		urlstr := r.URL.String()
+		url := httpVerbs{urlstr}
 		fmt.Println(url)
+		fmt.Println("This works")
+		//httpVerbs.storeInterface(url)
 		break
-	case delete:
+	case "POST":
 		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
 		fmt.Println(r.Method)
 		fmt.Fprintf(w, "Post")
+
+		verb := r.Method
+		method := httpVerbs{verb}
+		httpVerbs.storeInterface(method)
+		fmt.Println("This works")
+		break
+	case "PUT":
+		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
+		fmt.Println(r.Method)
+		fmt.Fprintf(w, "PUT")
+
+		verb := r.Method
+		method := httpVerbs{verb}
+		httpVerbs.storeInterface(method)
+
+		urlstr := r.URL.String()
+		url := httpVerbs{urlstr}
+		fmt.Println(url)
+
+		httpVerbs.storeInterface(url)
+		break
+	case "DELETE":
+		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
+		fmt.Println(r.Method)
+		fmt.Fprintf(w, "Post")
+
+		verb := r.Method
+		method := httpVerbs{verb}
+		httpVerbs.storeInterface(method)
+		fmt.Println(method)
 		break
 	default:
 		http.Error(w, "BadRequest status code", 400)
@@ -78,7 +87,8 @@ func (v httpVerbs) storeInterface() {
 
 	} else if v.verb == "PUT" {
 		fmt.Println("PUT- Set(key string, value []byte): this will set or update the key with the specified value")
-	} else if v.verb == delete {
+
+	} else if v.verb == "DELETE" {
 		fmt.Println("DELETE- Deletes(key string): this will delete the key from the store")
 	} else {
 		fmt.Println(v.verb)
