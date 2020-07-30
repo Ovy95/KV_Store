@@ -2,97 +2,109 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"io/ioutil"
 	"net/http"
+	"strings"
+	"sync"
 )
 
-type storeMethods interface {
-	storeInterface()
+type KvData struct {
+	Key   string
+	Value []byte
 }
 
-type httpVerbs struct {
-	verb string
+type KvHandlers struct {
+	sync.Mutex
+	store map[string]KvData 
+}
+
+func (h *KvHandlers) SortData(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		h.get(w, r)
+		return
+	case "POST":
+		h.post(w, r)
+		return
+	case "DELETE":
+		h.delete(w, r)
+		return
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("method not allowed"))
+		return
+	}
+}
+
+func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
+	url := r.URL.String()
+	url = strings.Trim(url, "/")
+	KValue := make([]KvData, len(h.store))
+	h.Lock()
+
+	i := 0
+	for _, stored := range h.store {
+		KValue[i] = stored
+		i++
+	}
+	h.Unlock()
+
+	if url == "" {
+		fmt.Fprintln(w, KValue)
+		return
+	}
+	for _, item := range KValue {
+		if url == item.Key {
+			w.Write([]byte(item.Value))
+			return
+		}
+	}
+	w.WriteHeader(404)
+	w.Write([]byte("No Key could be found, try http://localhost:8080/ to see the list of stored keys"))
+}
+
+func (h *KvHandlers) post(w http.ResponseWriter, r *http.Request) {
+	url := r.URL.String()
+	url = strings.Trim(url, "/")
+	fmt.Println(url)
+
+	var KeyValue KvData
+	KeyValue.Key = url
+
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	KeyValue.Value = append(KeyValue.Value, body...)
+	h.Lock()
+	h.store[KeyValue.Key] = KeyValue
+	defer h.Unlock()
+}
+func (h *KvHandlers) delete(w http.ResponseWriter, r *http.Request) {
+	url := r.URL.String()
+	url = strings.Trim(url, "/")
+	for _, slices := range h.store {
+		if url == slices.Key {
+			delete(h.store, slices.Key)
+		}
+	}
+}
+
+func newCoasterHandlers() *KvHandlers {
+	return &KvHandlers{
+		store: map[string]KvData{},
+	}
 }
 
 func main() {
-	http.HandleFunc("/", handler)
-	fmt.Println("Server is starting on port 8080")
+	KvHandlers := newCoasterHandlers()
+	http.HandleFunc("/", KvHandlers.SortData)
+	fmt.Println("Server 8080 is up")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		panic(err)
 	}
-
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
-		fmt.Fprintf(w, "----\n")
-
-		verb := r.Method
-		method := httpVerbs{verb}
-		httpVerbs.storeInterface(method)
-
-		urlstr := r.URL.String()
-		url := httpVerbs{urlstr}
-		fmt.Println(url)
-		fmt.Println("This works")
-		//httpVerbs.storeInterface(url)
-		break
-	case "POST":
-		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
-		fmt.Println(r.Method)
-		fmt.Fprintf(w, "Post")
-
-		verb := r.Method
-		method := httpVerbs{verb}
-		httpVerbs.storeInterface(method)
-		fmt.Println("This works")
-		break
-	case "PUT":
-		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
-		fmt.Println(r.Method)
-		fmt.Fprintf(w, "PUT")
-
-		verb := r.Method
-		method := httpVerbs{verb}
-		httpVerbs.storeInterface(method)
-
-		urlstr := r.URL.String()
-		url := httpVerbs{urlstr}
-		fmt.Println(url)
-
-		httpVerbs.storeInterface(url)
-		break
-	case "DELETE":
-		fmt.Fprintf(w, "THIS IS A %s method ON THE LOCALHOST AT THE INDEX%s\n", r.Method, r.URL)
-		fmt.Println(r.Method)
-		fmt.Fprintf(w, "Post")
-
-		verb := r.Method
-		method := httpVerbs{verb}
-		httpVerbs.storeInterface(method)
-		fmt.Println(method)
-		break
-	default:
-		http.Error(w, "BadRequest status code", 400)
-	}
-}
-
-func (v httpVerbs) storeInterface() {
-	if v.verb == "GET" {
-
-		fmt.Println("This is running the GET if statment")
-
-	} else if v.verb == "PUT" {
-		fmt.Println("PUT- Set(key string, value []byte): this will set or update the key with the specified value")
-
-	} else if v.verb == "DELETE" {
-		fmt.Println("DELETE- Deletes(key string): this will delete the key from the store")
-	} else {
-		fmt.Println(v.verb)
-		fmt.Println("This is the value that got print out")
-	}
-
 }
