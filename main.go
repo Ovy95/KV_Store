@@ -15,19 +15,22 @@ type KvData struct {
 
 type KvHandlers struct {
 	sync.Mutex
-	store map[string]KvData 
+	store map[string]KvData
 }
 
 func (h *KvHandlers) SortData(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		h.get(w, r)
+		w.WriteHeader(http.StatusOK)
 		return
 	case "POST":
 		h.post(w, r)
+		w.WriteHeader(http.StatusOK)
 		return
 	case "DELETE":
 		h.delete(w, r)
+		w.WriteHeader(http.StatusOK)
 		return
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -66,7 +69,7 @@ func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
 func (h *KvHandlers) post(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.String()
 	url = strings.Trim(url, "/")
-	fmt.Println(url)
+	//fmt.Println(url)
 
 	var KeyValue KvData
 	KeyValue.Key = url
@@ -93,14 +96,14 @@ func (h *KvHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func newCoasterHandlers() *KvHandlers {
+func newHandlers() *KvHandlers {
 	return &KvHandlers{
 		store: map[string]KvData{},
 	}
 }
 
 func main() {
-	KvHandlers := newCoasterHandlers()
+	KvHandlers := newHandlers()
 	http.HandleFunc("/", KvHandlers.SortData)
 	fmt.Println("Server 8080 is up")
 	err := http.ListenAndServe(":8080", nil)
