@@ -31,79 +31,27 @@ func TestHealthCheckHandler(t *testing.T) {
 	}
 }
 
-// Check tests are passing for the right reason !
+func TestSortdataMethodHandler(t *testing.T) {
+	// This is the check the error if the method isnt equal to the three cases
+	put, err := http.NewRequest("PUT", "/", http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// func PostCheckHandler(t *testing.T) {
+	rr := httptest.NewRecorder()
+	KvHandlers := newHandlers()
+	handler := http.HandlerFunc(KvHandlers.SortData)
 
-// 	req, err := http.NewRequest("POST", "/hello", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	handler.ServeHTTP(rr, put)
 
-// 	rr := httptest.NewRecorder()
-// 	KvHandlers := newHandlers()
-// 	handler := http.HandlerFunc(KvHandlers.SortData)
+	if rr.Code != http.StatusMethodNotAllowed {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			rr.Code, http.StatusMethodNotAllowed)
+	}
 
-// 	handler.ServeHTTP(rr, req)
-
-// 	if status := rr.Code; status != http.StatusOK {
-// 		t.Errorf("handler returned wrong status code: got %v want %v",
-// 			status, http.StatusOK)
-// 	}
-
-// 	get, err := http.NewRequest("GET", "/hello", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	getRR := httptest.NewRecorder()
-// 	handler.ServeHTTP(getRR, get)
-
-// 	if status := rr.Code; status != http.StatusOK {
-// 		t.Errorf("handler returned wrong status code: got %v want %v",
-// 			status, http.StatusOK)
-// 	}
-// 	expected := ""
-// 	if getRR.Body.String() != expected {
-// 		t.Errorf("handler returned unexpected body: got %v want %v",
-// 			rr.Body.String(), expected)
-// 	}
-// }
-
-// func PostPostGetCheckHandler(t *testing.T) {
-
-// 	req, err := http.NewRequest("POST", "/hello", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	req2, err := http.NewRequest("POST", "/world", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	postRR := httptest.NewRecorder()
-
-// 	KvHandlers := newHandlers()
-// 	handler := http.HandlerFunc(KvHandlers.SortData)
-
-// 	handler.ServeHTTP(postRR, req)
-// 	handler.ServeHTTP(postRR, req2)
-
-// 	getreq, err := http.NewRequest("GET", "/", nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	getRR := httptest.NewRecorder()
-// 	handler.ServeHTTP(getRR, getreq)
-
-// 	if status := getRR.Code; status != http.StatusOK {
-// 		t.Errorf("handler returned wrong status code: got %v want %v",
-// 			status, http.StatusOK)
-// 	}
-// 	expected := ""
-// 	if getRR.Body.String() != expected {
-// 		t.Errorf("handler returned unexpected body: got %v want %v",
-// 			getRR.Body.String(), expected)
-// 	}
-// }
+	expected := "method not allowed"
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned wrong status code: got %s want %s",
+			rr.Body, expected)
+	}
+}
