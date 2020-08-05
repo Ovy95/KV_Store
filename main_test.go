@@ -3,10 +3,11 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
-func TestHealthCheckHandler(t *testing.T) {
+func TestGetErrorMethod(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/string", nil)
 	if err != nil {
@@ -31,7 +32,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	}
 }
 
-func TestSortdataMethodHandler(t *testing.T) {
+func TestSortDataDefaultCase(t *testing.T) {
 	// This is the check the error if the method isnt equal to the three cases
 	put, err := http.NewRequest("PUT", "/", http.NoBody)
 	if err != nil {
@@ -53,5 +54,43 @@ func TestSortdataMethodHandler(t *testing.T) {
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned wrong status code: got %s want %s",
 			rr.Body, expected)
+	}
+}
+
+func TestPost(t *testing.T) {
+	bodyReader := strings.NewReader("Body Testing")
+
+	req, err := http.NewRequest("POST", "/hello", bodyReader)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	KvHandlers := newHandlers()
+	handler := http.HandlerFunc(KvHandlers.SortData)
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	get, err := http.NewRequest("GET", "/hello", http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getRR := httptest.NewRecorder()
+	handler.ServeHTTP(getRR, get)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	expected := "Body Testing"
+	if getRR.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got%v want%v", getRR.Body.String(), expected)
 	}
 }
