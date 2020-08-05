@@ -69,7 +69,6 @@ func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
 func (h *KvHandlers) post(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.String()
 	url = strings.Trim(url, "/")
-	//fmt.Println(url)
 
 	var KeyValue KvData
 	KeyValue.Key = url
