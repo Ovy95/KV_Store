@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 )
@@ -18,7 +19,10 @@ type KvHandlers struct {
 	store map[string]KvData
 }
 
-func (h *KvHandlers) SortData(w http.ResponseWriter, r *http.Request) {
+type Istore interface {
+}
+
+func (h *KvHandlers) HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		h.get(w, r)
@@ -39,9 +43,17 @@ func (h *KvHandlers) SortData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getKeyFromURL(url *url.URL) string {
+	path := url.EscapedPath()
+	return strings.TrimSpace(string(path[1:]))
+}
+
 func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.String()
-	url = strings.Trim(url, "/")
+	url := getKeyFromURL(r.URL)
+
+	// url := r.URL.String()
+	// url = strings.Trim(url, "/")
+
 	KValue := make([]KvData, len(h.store))
 	h.Lock()
 
@@ -88,6 +100,7 @@ func (h *KvHandlers) post(w http.ResponseWriter, r *http.Request) {
 func (h *KvHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.String()
 	url = strings.Trim(url, "/")
+
 	for _, slices := range h.store {
 		if url == slices.Key {
 			delete(h.store, slices.Key)
@@ -103,7 +116,7 @@ func newHandlers() *KvHandlers {
 
 func main() {
 	KvHandlers := newHandlers()
-	http.HandleFunc("/", KvHandlers.SortData)
+	http.HandleFunc("/", KvHandlers.HttpHandlerFunc)
 	fmt.Println("Server 8080 is up")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
