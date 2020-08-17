@@ -18,7 +18,7 @@ type KvHandlers struct {
 	store map[string]KvData
 }
 
-func (h *KvHandlers) SortData(w http.ResponseWriter, r *http.Request) {
+func (h *KvHandlers) HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		h.get(w, r)
@@ -103,7 +103,7 @@ func newHandlers() *KvHandlers {
 
 func main() {
 	KvHandlers := newHandlers()
-	http.HandleFunc("/", KvHandlers.SortData)
+	http.HandleFunc("/", KvHandlers.HttpHandlerFunc)
 	fmt.Println("Server 8080 is up")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
