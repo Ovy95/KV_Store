@@ -18,15 +18,28 @@ type KvHandlers struct {
 	sync.Mutex
 	store map[string]KvData
 }
+type GkEy interface {
+	getKeyFromURL(url *url.URL) string
+}
 
 type Istore interface {
+	Get(string) []byte
+	Post(string, []byte)
+	Delete(string)
+}
+
+func (h *KvHandlers) getter(string) []byte {
+	return fmt.Println(*KvData.Value)
 }
 
 func (h *KvHandlers) HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
+		//	h.action(w http.ResponseWriter, r *http.Request)
+
 		h.get(w, r)
 		w.WriteHeader(http.StatusOK)
+		et(KvHandlers)
 		return
 	case "POST":
 		h.post(w, r)
@@ -43,17 +56,15 @@ func (h *KvHandlers) HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getKeyFromURL(url *url.URL) string {
-	path := url.EscapedPath()
-	return strings.TrimSpace(string(path[1:]))
-}
-
 func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
-	url := getKeyFromURL(r.URL)
-
-	// url := r.URL.String()
-	// url = strings.Trim(url, "/")
-
+	//Istore.HandlerFunc()
+	// func getKeyFromURL(url *url.URL) string {
+	// 	path := url.EscapedPath()
+	// 	return strings.TrimSpace(string(path[1:]))
+	// }
+	// getKeyFromURL(url * url.URL)
+	url := r.URL.String()
+	url = strings.Trim(url, "/")
 	KValue := make([]KvData, len(h.store))
 	h.Lock()
 
@@ -74,6 +85,7 @@ func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
 	w.WriteHeader(404)
 	w.Write([]byte("No Key could be found, try http://localhost:8080/ to see the list of stored keys"))
 }
@@ -100,7 +112,6 @@ func (h *KvHandlers) post(w http.ResponseWriter, r *http.Request) {
 func (h *KvHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.String()
 	url = strings.Trim(url, "/")
-
 	for _, slices := range h.store {
 		if url == slices.Key {
 			delete(h.store, slices.Key)
@@ -115,8 +126,8 @@ func newHandlers() *KvHandlers {
 }
 
 func main() {
-	KvHandlers := newHandlers()
-	http.HandleFunc("/", KvHandlers.HttpHandlerFunc)
+	example := newHandlers()
+	http.HandleFunc("/", example.HttpHandlerFunc)
 	fmt.Println("Server 8080 is up")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
