@@ -8,28 +8,45 @@ import (
 	"sync"
 )
 
-type KvData struct {
-	Key   string
-	Value []byte
+type Store interface {
+	get(key string) ([]byte, bool)
+	post(key string, value []byte)
+	delete(key string)
 }
 
-type KvHandlers struct {
+type Data struct {
 	sync.Mutex
-	store map[string]KvData
+	DataStore map[string][]byte
 }
 
-func (h *KvHandlers) HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
+func HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
+
+	url := r.URL.String()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	defer r.Body.Close()
+	key := strings.Trim(url, "/")
+	value := body
+
 	switch r.Method {
 	case "GET":
-		h.get(w, r)
+		Store.get(key)
 		w.WriteHeader(http.StatusOK)
+
+		// This has got to be in here as its being used from a WR function
+		//w.WriteHeader(404)
+		//w.Write([]byte("No Key could be found, try http://localhost:8080/ to see the list of stored keys"))
 		return
 	case "POST":
-		h.post(w, r)
+		Store.post(key, []byte(value))
 		w.WriteHeader(http.StatusOK)
 		return
 	case "DELETE":
-		h.delete(w, r)
+		Store.delete(key)
 		w.WriteHeader(http.StatusOK)
 		return
 	default:
@@ -39,71 +56,39 @@ func (h *KvHandlers) HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *KvHandlers) get(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.String()
-	url = strings.Trim(url, "/")
-	KValue := make([]KvData, len(h.store))
-	h.Lock()
+func (s *Data) get(key string) {
+	fmt.Println("get called")
+	s.Lock()
 
-	i := 0
-	for _, stored := range h.store {
-		KValue[i] = stored
-		i++
-	}
-	h.Unlock()
+	s.Unlock()
 
-	if url == "" {
-		fmt.Fprintln(w, KValue)
-		return
-	}
-	for _, item := range KValue {
-		if url == item.Key {
-			w.Write([]byte(item.Value))
-			return
-		}
-	}
-	w.WriteHeader(404)
-	w.Write([]byte("No Key could be found, try http://localhost:8080/ to see the list of stored keys"))
 }
 
-func (h *KvHandlers) post(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.String()
-	url = strings.Trim(url, "/")
+func (s *Data) post(key string, value []byte) {
+	fmt.Println("post called")
 
-	var KeyValue KvData
-	KeyValue.Key = url
+	s.Lock()
 
-	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	KeyValue.Value = append(KeyValue.Value, body...)
-	h.Lock()
-	h.store[KeyValue.Key] = KeyValue
-	defer h.Unlock()
+	s.Unlock()
 }
-func (h *KvHandlers) delete(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.String()
-	url = strings.Trim(url, "/")
-	for _, slices := range h.store {
-		if url == slices.Key {
-			delete(h.store, slices.Key)
-		}
-	}
+func (s *Data) delete(st, key string) {
+	fmt.Println("delete called")
+	s.Lock()
+	// From feedback might look something like this
+	//delete(s.Data, key)
+	s.Unlock()
 }
 
-func newHandlers() *KvHandlers {
-	return &KvHandlers{
-		store: map[string]KvData{},
-	}
+func initialise() {
+	// this Needs fixing
+	// return &Data{
+	// 	DataStore: map[string][]byte{},
+	// }
 }
 
 func main() {
-	KvHandlers := newHandlers()
-	http.HandleFunc("/", KvHandlers.HttpHandlerFunc)
+
+	http.HandleFunc("/", HttpHandlerFunc)
 	fmt.Println("Server 8080 is up")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
