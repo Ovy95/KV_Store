@@ -2,20 +2,20 @@ package main
 
 import (
 	"KV_STORE/store"
+	"strings"
 
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
+	"net/url"
 )
 
 var st *store.Data
 
 func HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
-	url := r.URL.String()
-
+	url := getKeyFromURL(r.URL)
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -24,8 +24,7 @@ func HttpHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer r.Body.Close()
-
-	key := strings.Trim(url, "/")
+	key := url
 	value := body
 
 	switch r.Method {
@@ -58,6 +57,11 @@ func init() {
 	st = &store.Data{
 		Data: map[string][]byte{},
 	}
+}
+
+func getKeyFromURL(url *url.URL) string {
+	path := url.EscapedPath()
+	return strings.TrimSpace(string(path[1:]))
 }
 
 func main() {
